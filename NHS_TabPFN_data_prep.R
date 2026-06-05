@@ -153,6 +153,19 @@ safe_kalman <- function(x) {
 forecasting_df <- forecasting_df %>%
   mutate(across(all_of(impute_cols), ~ safe_kalman(.)))
 
+# Backstop: guarantee no predictor NA survives to na.omit, so assessment-period rows
+# can never be silently dropped (which would break the 173 contiguous 10-day windows
+# or lose late-March periods). safe_kalman already fully imputes the development data,
+# so this is a no-op on the current file; it only activates if the assessment CSV
+# contains a gap that both Kalman and linear interpolation leave unfilled. LOCF in
+# both directions fills any column with at least one observation; the mean fallback
+# only ever applies to an all-NA column (already pathological upstream).
+forecasting_df <- forecasting_df %>%
+  mutate(across(all_of(impute_cols), ~ {
+    v <- zoo::na.locf(zoo::na.locf(.x, na.rm = FALSE), fromLast = TRUE, na.rm = FALSE)
+    ifelse(is.na(v), mean(v, na.rm = TRUE), v)
+  }))
+
 forecasting_df <- na.omit(forecasting_df)
 cat("Rows after imputation and NA filtering:", nrow(forecasting_df), "\n")
 
