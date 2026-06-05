@@ -1,0 +1,22 @@
+{
+  "_comment": "Per-prize-block config. Baseline = day-of-week-adjusted rolling mean (level_window=45, full-history dow deviations), locked by a free grid search and robust over hundreds of origins. The TabPFN residual is fit per horizon. Robust validation (484 origins / 182 winter, retrained every 3 weeks) shows the residual helps days 1-5 (opsplus features, alpha=0.8: winter MSE 0.131->0.119) but NOT days 6-10 (operational signals too stale; baseline wins), so block_610 alpha=0. The block_610 feature_set is unused while alpha=0 but kept for transparency / easy re-enabling.",
+  "block_15": {
+    "horizons": [1, 2, 3, 4, 5],
+    "feature_set": "opsplus",
+    "level_window": 45,
+    "dow_window": 99999,
+    "train_window": 365,
+    "n_estimators": 8,
+    "alpha": 0.8
+  },
+  "block_610": {
+    "horizons": [6, 7, 8, 9, 10],
+    "feature_set": "full",
+    "level_window": 45,
+    "dow_window": 99999,
+    "train_window": 365,
+    "n_estimators": 8,
+    "alpha": 0.0
+  },
+  "clip_min_frac": 0.5
+}
